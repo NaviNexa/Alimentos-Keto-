@@ -1873,32 +1873,34 @@ function buscarAlimento(consulta){
   const q = normalizarTexto(consulta);
   if(!q) return null;
 
-  for(const [cat, items] of Object.entries(DATOS)){
-    for(const item of items){
-      const n = normalizarTexto(item.n);
-      if(n === q || n.includes(q) || q.includes(n)){
-        return { estado:'permitido', nombre:item.n, categoria:cat, gluten:!!item.g, procesado:!!item.p };
-      }
-    }
-  }
+  // Reunimos todos los candidatos primero
+  const permitidos = [];
+  Object.entries(DATOS).forEach(([cat, items]) => {
+    items.forEach(item => permitidos.push({ nombre:item.n, categoria:cat, gluten:!!item.g, procesado:!!item.p }));
+  });
+  Object.entries(personalizados).forEach(([cat, nombres]) => {
+    nombres.forEach(nombre => permitidos.push({ nombre, categoria:cat, gluten:false, procesado:false, personalizado:true }));
+  });
 
-  for(const [cat, nombres] of Object.entries(personalizados)){
-    for(const nombre of nombres){
-      const n = normalizarTexto(nombre);
-      if(n === q || n.includes(q) || q.includes(n)){
-        return { estado:'permitido', nombre:nombre, categoria:cat, gluten:false, procesado:false, personalizado:true };
-      }
-    }
-  }
+  const noPermitidos = [];
+  Object.entries(NO_PERMITIDOS).forEach(([cat, items]) => {
+    items.forEach(item => noPermitidos.push({ nombre:item.n, categoria:cat, motivo:item.m }));
+  });
 
-  for(const [cat, items] of Object.entries(NO_PERMITIDOS)){
-    for(const item of items){
-      const n = normalizarTexto(item.n);
-      if(n === q || n.includes(q) || q.includes(n)){
-        return { estado:'no_permitido', nombre:item.n, categoria:cat, motivo:item.m };
-      }
-    }
-  }
+  // 1º: coincidencia exacta (evita que una palabra corta como "Té" se
+  // "encuentre" dentro de otra palabra más larga, p. ej. "Ternasco")
+  let match = permitidos.find(i => normalizarTexto(i.nombre) === q);
+  if(match) return { estado:'permitido', ...match };
+
+  match = noPermitidos.find(i => normalizarTexto(i.nombre) === q);
+  if(match) return { estado:'no_permitido', ...match };
+
+  // 2º: el nombre del alimento contiene lo que has escrito (búsqueda parcial)
+  match = permitidos.find(i => normalizarTexto(i.nombre).includes(q));
+  if(match) return { estado:'permitido', ...match };
+
+  match = noPermitidos.find(i => normalizarTexto(i.nombre).includes(q));
+  if(match) return { estado:'no_permitido', ...match };
 
   return { estado:'no_encontrado', nombre:consulta };
 }
