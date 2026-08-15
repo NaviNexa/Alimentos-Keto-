@@ -1200,6 +1200,7 @@ const DATOS = {
     {n:"Sal marina"}, {n:"Ajo negro"}, {n:"Tahini"}, {n:"Mayonesa casera"},
     {n:"Caldo de huesos casero"}, {n:"Vinagre de manzana"}, {n:"Vinagre de vino"},
     {n:"Vinagre de jerez"}, {n:"Café"}, {n:"Té"}, {n:"Cacao puro sin azúcar"},
+    {n:"Chocolate negro 99% cacao"},
     {n:"Caldo comercial", g:true, p:true}, {n:"Vinagre balsámico", g:false},
     {n:"Mostaza sin azúcar añadido"}, {n:"Salsa de soja", g:true},
     {n:"Avena sin certificar sin gluten", g:true}
@@ -1685,6 +1686,23 @@ document.getElementById('btnCompartir').addEventListener('click', async () => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+});
+
+// ---------- Mayúscula automática al escribir ----------
+
+function capitalizarPrimeraLetra(el){
+  if(!el.value) return;
+  const primera = el.value.charAt(0).toUpperCase();
+  if(el.value.charAt(0) !== primera){
+    const posicionCursor = el.selectionStart;
+    el.value = primera + el.value.slice(1);
+    el.setSelectionRange(posicionCursor, posicionCursor);
+  }
+}
+
+['inputNuevoAlimento', 'inputBusqueda'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', () => capitalizarPrimeraLetra(el));
 });
 
 // ---------- Añadir alimento personalizado ----------
